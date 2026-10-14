@@ -1,2 +1,8 @@
 # Proyecto_operativos
-Se ejecuta usando ./generadorCSV -p FR -e 75
+Este repositorio tiene como finalidad implementar un  ISE (Indice de Sentimiento Economico)
+## Integrantes del grupo
+Santiago Arias Tovar
+Juan Sebastian Quintero Gil
+Jesus Daniel Duque Aparicio
+Pablo Samuel Leon Hernandez
+Katheryn Camacho Gonzalez
