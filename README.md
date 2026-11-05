@@ -1,4 +1,3 @@
-# Proyecto_operativos
 # Proyecto: Indicador de Sentimiento Económico (ISE)
 
 ## 1. Descripción del proyecto
