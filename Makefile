@@ -1,10 +1,15 @@
-CC = gcc
-CFLAGS = -Wall
+GCC = gcc
+POSIX = -lpthread
 
-all: generadorCSV
+PROGRAMAS = generadorCSV agentePais
+
+ALL: $(PROGRAMAS)
 
 generadorCSV: generadorCSV.c
-	$(CC) $(CFLAGS) -o generadorCSV generadorCSV.c
+	$(GCC) $(CFLAGS) $@.c -o $@
 
-clean:
-	rm -f generadorCSV encuestas_*.csv
+agentePais: agentePais.c
+	$(GCC) $(CFLAGS) $@.c -o $@
+
+clear:
+	$(RM) $(PROGRAMAS) encuestas_*.csv
