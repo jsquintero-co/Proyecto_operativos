@@ -105,9 +105,10 @@ int main(int argc, char *argv[]) {
 
     fclose(fp);
 
-    // Ignoramos SIGPIPE para controlar errores de escritura si el servidor cierra
-    signal(SIGPIPE, SIG_IGN);
-
+    #ifdef SIGPIPE
+        signal(SIGPIPE, SIG_IGN);
+    #endif
+    
     // Abrimos el pipe nominal para escritura
     int dp = open(nombrePipe, O_WRONLY);
     if (dp == -1) {
