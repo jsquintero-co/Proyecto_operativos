@@ -1,9 +1,10 @@
 GCC = gcc
+CFLAGS = -Wall
 POSIX = -lpthread
 
-PROGRAMAS = generadorCSV agentePais
+PROGRAMAS = generadorCSV agentePais servidorISE
 
-ALL: $(PROGRAMAS)
+all: $(PROGRAMAS)
 
 generadorCSV: generadorCSV.c
 	$(GCC) $(CFLAGS) $@.c -o $@
@@ -11,5 +12,8 @@ generadorCSV: generadorCSV.c
 agentePais: agentePais.c
 	$(GCC) $(CFLAGS) $@.c -o $@
 
-clear:
-	$(RM) $(PROGRAMAS) encuestas_*.csv
+servidorISE: servidorISE.c COMUN.h
+	$(GCC) $(CFLAGS) servidorISE.c -o $@ $(POSIX)
+
+clean:
+	$(RM) $(PROGRAMAS) encuestas_*.csv PipeN ise_fifo
