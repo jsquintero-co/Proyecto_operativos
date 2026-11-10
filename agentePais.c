@@ -1,3 +1,9 @@
+/*#################################
+*    Pontificia Universidad Javeriana
+*    Tema: agente de lectura y envío de encuestas por país
+*    Proyecto ISE
+###################################*/
+
 #include "COMUN.h"
 #include <string.h>
 #include <fcntl.h>
