@@ -3,11 +3,15 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // Funcion para enviar un mensaje por el pipe
 int enviarMensaje(int dp, Mensaje mensaje) {
+    // Enviamos el mensaje
     ssize_t resultado = write(dp, &mensaje, sizeof(Mensaje));
 
+    // Revisamos si hubo un error
     if (resultado != sizeof(Mensaje)) {
         perror("Error al enviar mensaje");
         return -1;
@@ -38,10 +42,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Abrimos el archivo CSV
+    // Abrimos el archivo CSV, fp es un puntero al archivo csv
     FILE *fp = fopen(archivo, "r");
     if (fp == NULL) {
-        perror("Error al abrir el archivo CSV");
+        perror("Error al abrir el archivo");
         return 1;
     }
 
@@ -63,8 +67,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Revisamos que existan encuestas
     if (total == 0) {
-        printf("El archivo no tiene encuestas válidas\n");
+        printf("El archivo no tiene encuestas\n");
         fclose(fp);
         return 1;
     }
@@ -77,49 +82,73 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Volvemos al inicio del archivo y saltamos el encabezado
+    // Volvemos al inicio del archivo
     rewind(fp);
+
+    // Saltamos nuevamente el encabezado
     fgets(linea, sizeof(linea), fp);
 
     int leidas = 0;
+
+    // Leemos los datos de cada encuesta
     while (fgets(linea, sizeof(linea), fp) != NULL) {
+        // Ignoramos las lineas vacias
         if (linea[0] == '\n' || linea[0] == '\r') {
             continue;
         }
 
-        // Extraemos los datos de la encuesta
-        if (sscanf(linea, "%*[^,],%2[^,],%*[^,],%*[^,],%d,%f",
-                   pais,
+        char pais_linea[3] = "";
+
+        // Extraemos el pais, el sector y el sentimiento de forma robusta
+        if (sscanf(linea, "%*[^,],%*[^,],%2[^,],%*[^,],%d,%f",
+                   pais_linea,
                    &encuestas[leidas].id_sector,
                    &encuestas[leidas].sentimiento) != 3) {
-            printf("Error leyendo una encuesta en el archivo\n");
-            free(encuestas);
-            fclose(fp);
-            return 1;
+            
+            if (sscanf(linea, "%*[^,],%2[^,],%*[^,],%*[^,],%d,%f",
+                       pais_linea,
+                       &encuestas[leidas].id_sector,
+                       &encuestas[leidas].sentimiento) != 3) {
+                
+                printf("Error leyendo una encuesta\n");
+                free(encuestas);
+                fclose(fp);
+                return 1;
+            }
         }
 
+        // Indicamos que es un mensaje de encuesta
         encuestas[leidas].tipo = MP_ENCUESTA;
-        strcpy(encuestas[leidas].pais, pais);
+
+        // Guardamos el pais
+        strcpy(encuestas[leidas].pais, pais_linea);
+
+        if (leidas == 0) {
+            strcpy(pais, pais_linea);
+        }
+
         leidas++;
     }
 
+    // Cerramos el archivo porque ya terminamos de leerlo
     fclose(fp);
 
-    #ifdef SIGPIPE
-        signal(SIGPIPE, SIG_IGN);
-    #endif
-    
-    // Abrimos el pipe nominal para escritura
+    // Ignoramos SIGPIPE si está disponible (entornos POSIX/Linux) para controlar errores de escritura
+#ifdef SIGPIPE
+    signal(SIGPIPE, SIG_IGN);
+#endif
+
+    // Abrimos el pipe para escribir
     int dp = open(nombrePipe, O_WRONLY);
     if (dp == -1) {
-        perror("Error al abrir el pipe nominal");
+        perror("Error al abrir el pipe");
         free(encuestas);
         return 1;
     }
 
     Mensaje mensaje;
 
-    // 1. Enviamos mensaje de conexión inicial
+    // Primero enviamos el mensaje de conexion
     mensaje.tipo = MP_CONEXION;
     strcpy(mensaje.pais, pais);
     mensaje.id_sector = 0;
@@ -137,7 +166,7 @@ int main(int argc, char *argv[]) {
     printf("Leídas %d encuestas.\n", total);
     printf("Conectando al proceso principal...\nConectado.\nEnviando...\n");
 
-    // 2. Enviamos las encuestas una por una
+    // Enviamos las encuestas una por una
     for (int i = 0; i < total; i++) {
         if (enviarMensaje(dp, encuestas[i]) == -1) {
             close(dp);
@@ -145,14 +174,16 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        // Mostramos progreso cada 500 o al finalizar (o cada 100 según prefieras)
+        // Mostramos el progreso cada 500 encuestas o al finalizar
         if ((i + 1) % 500 == 0 || i + 1 == total) {
             printf("%d/%d\n", i + 1, total);
         }
     }
 
-    // 3. Mensaje de fin
+    // Avisamos que terminamos de enviar las encuestas
     mensaje.tipo = MP_FIN;
+    strcpy(mensaje.pais, pais);
+
     if (enviarMensaje(dp, mensaje) == -1) {
         close(dp);
         free(encuestas);
@@ -163,7 +194,7 @@ int main(int argc, char *argv[]) {
     printf("Mensaje de finalización enviado.\n");
     printf("Envío %s finalizado satisfactoriamente!!\n", pais);
 
-    // Liberación de recursos
+    // Liberamos la memoria y cerramos el pipe
     free(encuestas);
     close(dp);
 
