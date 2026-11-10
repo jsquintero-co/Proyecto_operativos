@@ -1,3 +1,9 @@
+/*#################################
+*    Pontificia Universidad Javeriana
+*    Tema: control del proceso principal y procesamiento con hilos
+*    Proyecto ISE
+###################################*/
+
 #include "COMUN.h"
 #include <stdio.h>
 #include <stdlib.h>
