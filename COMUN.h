@@ -1,3 +1,9 @@
+/*#################################
+*    Pontificia Universidad Javeriana
+*    Tema: definiciones compartidas, estructuras y constantes
+*    Proyecto ISE
+###################################*/
+
 #ifndef COMUN_H
 #define COMUN_H
 
