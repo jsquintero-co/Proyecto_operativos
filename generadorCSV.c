@@ -1,3 +1,9 @@
+/*#################################
+*	Pontificia Universidad Javeriana
+*	Tema: generador de archivos CSV de encuestas
+*	Proyecto ISE
+###################################*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
